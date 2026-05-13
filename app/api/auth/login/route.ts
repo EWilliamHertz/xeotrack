@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
     const { email, password } = await request.json()
 
     const client = await pool.connect()
-    const result = await client.query(
-      'SELECT id, email, password_hash FROM "user" WHERE email = $1',
+      const result = await client.query(
+      'SELECT id, email, hashed_password FROM "user" WHERE email = $1',
       [email]
     )
     client.release()
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = result.rows[0]
-    const isValid = await bcrypt.compare(password, user.password_hash)
+    const isValid = await bcrypt.compare(password, user.hashed_password)
 
     if (!isValid) {
       return NextResponse.json(
