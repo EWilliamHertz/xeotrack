@@ -20,3 +20,4 @@ Password: (check your database)
 
 - `DATABASE_URL`: PostgreSQL connection string (Neon)
 - `JWT_SECRET`: Secret key for JWT tokens
+# Updated Wed May 13 10:41:49 UTC 2026
