@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-<body className="bg-slate-950 text-slate-100 min-h-screen relative">
+<body className="bg-slate-950 text-slate-100 min-h-screen flex flex-col relative">
         {/* Top Branding Logo */}
         <header className="fixed top-0 left-0 right-0 z-[40] bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-6 py-4">
           <div className="flex items-center gap-2 max-w-5xl mx-auto">
@@ -26,11 +26,11 @@ export default function RootLayout({
         </header>
 
         {/* Main Content Area */}
-        <main className="pt-24 pb-32 px-4 max-w-5xl mx-auto">
+        <main className="flex-1 pt-24 pb-6 px-4 max-w-5xl mx-auto w-full">
           {children}
         </main>
         
-        {/* Fixed Bottom Navbar */}
+        {/* Sticky Bottom Navbar */}
         <Navbar />
       </body>
     </html>

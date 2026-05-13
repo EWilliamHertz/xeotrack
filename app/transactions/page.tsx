@@ -1,29 +1,54 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { fetchTransactions, createTransaction } from './actions'
-import { getDashboardStats } from '../dashboard/actions'
-import { Plus, ChevronLeft, ChevronRight, Calendar, User, Tag, Link2 } from 'lucide-react'
+import { fetchDebts } from '../debts/actions'
+import { Plus, ChevronLeft, ChevronRight, Calendar, User, Filter, X } from 'lucide-react'
 
 export default function Transactions() {
   const [txns, setTxns] = useState([])
   const [debts, setDebts] = useState([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  
+  const [filters, setFilters] = useState({
+    type: '', name: '', party: '', minAmount: '', maxAmount: ''
+  })
+  
   const [form, setForm] = useState({
     type: 'expense', amount: '', category: 'General', description: '',
     date: new Date().toISOString().split('T')[0], party: '', linkDebtId: ''
   })
 
-  useEffect(() => {
+  const loadTxns = () => {
     const token = localStorage.getItem('token') || ''
-    fetchTransactions(token, page).then(res => {
+    fetchTransactions(token, page, filters).then(res => {
       if (res.success) { setTxns(res.data); setTotalPages(res.totalPages); }
     })
-    getDashboardStats(token).then(res => {
-      if (res.success) { /* Logic to set list of debts for the dropdown would go here */ }
+    fetchDebts(token).then(res => {
+      if (res.success) { setDebts(res.data); }
     })
-  }, [page, isModalOpen])
+  }
+
+  useEffect(() => { loadTxns() }, [page, isModalOpen])
+
+  const isAsset = (typeString: string) => {
+    const t = (typeString || '').toLowerCase().trim()
+    return (t.includes('owed') && t.includes('to me')) || t === 'owed_to_me' || t === 'receivable' || t === 'receivables' || t === 'asset'
+  }
+
+  const applyFilters = () => {
+    setPage(1)
+    loadTxns()
+  }
+
+  const clearFilters = () => {
+    setFilters({ type: '', name: '', party: '', minAmount: '', maxAmount: '' })
+    setPage(1)
+    setTimeout(loadTxns, 0)
+  }
 
   const handleSave = async (e: any) => {
     e.preventDefault()
@@ -35,10 +60,44 @@ export default function Transactions() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-slate-100">Ledger</h1>
-        <button onClick={() => setIsModalOpen(true)} className="bg-cyan-600 hover:bg-cyan-500 p-3 rounded-2xl shadow-lg">
-          <Plus size={24} />
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setIsFilterOpen(!isFilterOpen)} className="bg-slate-800 hover:bg-slate-700 text-slate-300 p-3 rounded-2xl shadow-lg border border-slate-700">
+            <Filter size={24} />
+          </button>
+          <button onClick={() => setIsModalOpen(true)} className="bg-cyan-600 hover:bg-cyan-500 p-3 rounded-2xl shadow-lg">
+            <Plus size={24} />
+          </button>
+        </div>
       </div>
+
+      {isFilterOpen && (
+        <div className="bg-slate-900 border border-slate-800 p-4 rounded-3xl space-y-4 shadow-xl">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="font-bold text-slate-300">Advanced Filters</h3>
+            <button onClick={() => setIsFilterOpen(false)} className="text-slate-500 hover:text-slate-300"><X size={20}/></button>
+          </div>
+          
+          <div className="flex bg-slate-950 p-1 rounded-2xl">
+            {['', 'income', 'expense'].map((t) => (
+              <button key={t} onClick={() => setFilters({...filters, type: t})} className={`flex-1 py-2 rounded-xl text-xs font-black uppercase transition-colors ${filters.type === t ? 'bg-slate-800 text-white' : 'text-slate-500 hover:text-slate-300'}`}>
+                {t === '' ? 'All' : t}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <input placeholder="Search Description..." value={filters.name} onChange={e => setFilters({...filters, name: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-sm outline-none" />
+            <input placeholder="Search Party..." value={filters.party} onChange={e => setFilters({...filters, party: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-sm outline-none" />
+            <input type="number" placeholder="Min Amount (SEK)" value={filters.minAmount} onChange={e => setFilters({...filters, minAmount: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-sm outline-none" />
+            <input type="number" placeholder="Max Amount (SEK)" value={filters.maxAmount} onChange={e => setFilters({...filters, maxAmount: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-sm outline-none" />
+          </div>
+
+          <div className="flex gap-2">
+            <button onClick={applyFilters} className="flex-1 bg-cyan-600 hover:bg-cyan-500 py-3 rounded-xl text-sm font-bold">Apply Filters</button>
+            <button onClick={clearFilters} className="flex-1 bg-slate-800 hover:bg-slate-700 py-3 rounded-xl text-sm font-bold text-rose-400">Clear</button>
+          </div>
+        </div>
+      )}
 
       <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden divide-y divide-slate-800">
         {txns.map((t: any) => (

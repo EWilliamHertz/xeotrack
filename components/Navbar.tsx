@@ -60,7 +60,10 @@ export default function Navbar() {
       )}
 
      {/* Main Bottom Navbar - High Z-Index for Visibility */}
-      <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-slate-900 border-t border-slate-800 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
+      <nav 
+        className="bg-slate-900 border-t border-slate-800 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.4)]"
+        style={{ position: 'fixed', bottom: 0, left: 0, width: '100%', zIndex: 100 }}
+      >
         <div className="max-w-xl mx-auto px-2 h-20 flex items-center justify-around">
           
           {navItems.map((item) => {

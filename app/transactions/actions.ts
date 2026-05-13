@@ -8,7 +8,7 @@ async function getUserId(token: string) {
   return decoded.userId || decoded.sub
 }
 
-export async function fetchTransactions(token: string, page = 1, type = '') {
+export async function fetchTransactions(token: string, page = 1, filters: any = {}) {
   try {
     const userId = await getUserId(token)
     const limit = 10
@@ -16,11 +16,26 @@ export async function fetchTransactions(token: string, page = 1, type = '') {
     
     let sql = 'SELECT * FROM transactions WHERE user_id = $1'
     const params: any[] = [userId]
-    if (type) { params.push(type); sql += ` AND type = $${params.length}`; }
+    
+    if (filters.type) { params.push(filters.type); sql += ` AND type = $${params.length}`; }
+    if (filters.name) { params.push(`%${filters.name}%`); sql += ` AND (description ILIKE $${params.length} OR category ILIKE $${params.length})`; }
+    if (filters.party) { params.push(`%${filters.party}%`); sql += ` AND party ILIKE $${params.length}`; }
+    if (filters.minAmount) { params.push(filters.minAmount); sql += ` AND amount >= $${params.length}`; }
+    if (filters.maxAmount) { params.push(filters.maxAmount); sql += ` AND amount <= $${params.length}`; }
     
     sql += ` ORDER BY date DESC LIMIT ${limit} OFFSET ${offset}`
     const result = await query(sql, params)
-    const countRes = await query('SELECT COUNT(*) FROM transactions WHERE user_id = $1', [userId])
+    
+    // Exact same filters applied to the count query
+    let countSql = 'SELECT COUNT(*) FROM transactions WHERE user_id = $1'
+    const countParams: any[] = [userId]
+    if (filters.type) { countParams.push(filters.type); countSql += ` AND type = $${countParams.length}`; }
+    if (filters.name) { countParams.push(`%${filters.name}%`); countSql += ` AND (description ILIKE $${countParams.length} OR category ILIKE $${countParams.length})`; }
+    if (filters.party) { countParams.push(`%${filters.party}%`); countSql += ` AND party ILIKE $${countParams.length}`; }
+    if (filters.minAmount) { countParams.push(filters.minAmount); countSql += ` AND amount >= $${countParams.length}`; }
+    if (filters.maxAmount) { countParams.push(filters.maxAmount); countSql += ` AND amount <= $${countParams.length}`; }
+    
+    const countRes = await query(countSql, countParams)
     
     return { success: true, data: result.rows, totalPages: Math.ceil(countRes.rows[0].count / limit) }
   } catch (err: any) { return { success: false, error: err.message } }

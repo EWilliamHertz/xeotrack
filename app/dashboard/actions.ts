@@ -28,15 +28,15 @@ export async function getDashboardStats(token: string) {
     // Using a more flexible check to catch 'owed_to_me' or 'owed to me'
     const totalOwedToMe = debtsRes.rows
       .filter(d => {
-        const t = d.type?.trim().toLowerCase();
-        return t === 'owed_to_me' || t === 'owed to me';
+        const t = d.type?.trim().toLowerCase() || '';
+        return (t.includes('owed') && t.includes('me')) || t === 'receivable' || t === 'asset';
       })
       .reduce((sum, debt) => sum + Number(debt.remaining_amount), 0)
 
     const totalOwedByMe = debtsRes.rows
       .filter(d => {
-        const t = d.type?.trim().toLowerCase();
-        return t !== 'owed_to_me' && t !== 'owed to me';
+        const t = d.type?.trim().toLowerCase() || '';
+        return !((t.includes('owed') && t.includes('me')) || t === 'receivable' || t === 'asset');
       })
       .reduce((sum, debt) => sum + Number(debt.remaining_amount), 0)
 
