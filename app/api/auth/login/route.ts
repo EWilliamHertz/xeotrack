@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Pool } from 'pg'
-import bcrypt from 'bcrypt'
+import argon2 from 'argon2'
 import jwt from 'jsonwebtoken'
 
 const pool = new Pool({
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = result.rows[0]
-    const isValid = await bcrypt.compare(password, user.hashed_password)
+    const isValid = await argon2.verify(user.hashed_password, password)
     console.log("Password match result:", isValid)
 
     if (!isValid) {
