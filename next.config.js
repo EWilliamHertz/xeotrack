@@ -1,8 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  // Vercel will automatically handle Next.js
+  experimental: {
+    serverActions: {
+      allowedOrigins: ["*.cloudshell.dev", "*.googleusercontent.com", "localhost:3000"],
+    },
+  },
+  // This turns off the strict header check that causes the "Blocked" warning
+  devIndicators: {
+    appIsrStatus: false,
+  }
 }
 
 module.exports = nextConfig
-// Force clean rebuild 1778671648

@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { getDashboardStats } from './actions' // Import our new server action
+
+
+
 
 export default function Dashboard() {
   const router = useRouter()
@@ -16,54 +20,38 @@ export default function Dashboard() {
       return
     }
 
-  const fetchStats = async () => {
+const fetchStats = async () => {
       try {
-        const res = await fetch('/api/metrics', {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          },
-          credentials: 'include' // <--- This forces the Cloud Shell proxy to let the request through!
-        })
-        if (res.ok) {
-          const data = await res.json()
-          setStats(data)
-        } else if (res.status === 401) {
-          localStorage.removeItem('token')
-          router.push('/')
+        // Call the server action directly
+        const result = await getDashboardStats(token)
+        
+        if (result.success) {
+          setStats(result.data)
         } else {
-          // Capture backend server errors (like missing tables or 500 crashes)
-          const text = await res.text()
-          setErrorMsg(`Server Error ${res.status}: ${text}`)
+          if (result.error === 'jwt expired') {
+            localStorage.removeItem('token')
+            router.push('/')
+          } else {
+            setErrorMsg(`Server Error: ${result.error}`)
+          }
         }
       } catch (err: any) {
-        // Capture network errors (like adblockers or dropped connections)
-        setErrorMsg(`Network Error: ${err.message}`)
+        setErrorMsg(`Action Error: ${err.message}`)
       } finally {
         setLoading(false)
       }
     }
-
     fetchStats()
   }, [router])
   if (loading) return <div className="flex items-center justify-center h-screen text-slate-300">Loading Dashboard...</div>
 
   return (
     <div className="min-h-screen bg-slate-950 p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto pt-4">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text">
-            Dashboard
+            Financial Summary
           </h1>
-          <button
-            onClick={() => {
-              localStorage.removeItem('token')
-              router.push('/')
-            }}
-            className="px-4 py-2 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 rounded transition text-sm"
-          >
-            Logout
-          </button>
         </div>
 
         {stats ? (
