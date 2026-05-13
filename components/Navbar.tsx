@@ -15,9 +15,9 @@ import {
 } from 'lucide-react'
 
 const navItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Transactions', href: '/transactions', icon: ArrowLeftRight },
-  { name: 'Investments', href: '/investments', icon: TrendingUp },
+  { name: 'Home', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'History', href: '/transactions', icon: ArrowLeftRight },
+  { name: 'Invest', href: '/investments', icon: TrendingUp },
   { name: 'Debts', href: '/debts', icon: Wallet },
 ]
 
@@ -26,6 +26,7 @@ export default function Navbar() {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
 
+  // Only hide on the landing/login page
   if (pathname === '/') return null
 
   const handleLogout = () => {
@@ -35,69 +36,68 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Mobile Menu Drawer (Slides UP from bottom) */}
+      {/* Settings/Logout Drawer (Slides UP) */}
       {isOpen && (
-        <div className="fixed bottom-20 left-4 right-4 z-50 md:hidden">
-          <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-2xl p-2 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-24 left-4 right-4 z-[100] animate-in slide-in-from-bottom-10 duration-200">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-3 shadow-2xl">
             <Link
               href="/settings"
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:bg-slate-800 transition-colors"
+              className="flex items-center gap-4 px-4 py-4 rounded-2xl text-slate-300 hover:bg-slate-800 transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              <Settings size={20} /> Settings
+              <Settings size={20} />
+              <span className="font-bold">Settings</span>
             </Link>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-rose-400 hover:bg-slate-800 transition-colors"
+              className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-rose-400 hover:bg-rose-500/10 transition-colors"
             >
-              <LogOut size={20} /> Logout
+              <LogOut size={20} />
+              <span className="font-bold">Logout</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Main Bottom Navbar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-xl border-t border-slate-800 pb-safe">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+     {/* Main Bottom Navbar - High Z-Index for Visibility */}
+      <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-slate-900 border-t border-slate-800 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
+        <div className="max-w-xl mx-auto px-2 h-20 flex items-center justify-around">
           
-          {/* Logo (Desktop Only) */}
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center font-bold text-white">
-              X
-            </div>
-          </div>
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`flex flex-col items-center justify-center gap-1 min-w-[64px] h-full transition-all duration-200 ${
+                  isActive ? 'text-cyan-400' : 'text-slate-500'
+                }`}
+              >
+                <div className={`p-2 rounded-2xl transition-colors ${isActive ? 'bg-cyan-500/10' : ''}`}>
+                  <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                </div>
+                <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'opacity-100' : 'opacity-60'}`}>
+                  {item.name}
+                </span>
+              </Link>
+            )
+          })}
 
-          {/* Navigation Links (Middle) */}
-          <div className="flex flex-1 items-center justify-around max-w-2xl mx-auto">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex flex-col items-center gap-0.5 min-w-[64px] transition-all duration-200 ${
-                    isActive ? 'text-cyan-400' : 'text-slate-500 hover:text-slate-300'
-                  }`}
-                >
-                  <div className={`p-1.5 rounded-xl ${isActive ? 'bg-cyan-500/10' : ''}`}>
-                    <Icon size={26} />
-                  </div>
-                  <span className="text-[9px] font-black uppercase tracking-tighter">{item.name}</span>
-                </Link>
-              )
-            })}
-          </div>
-
-          {/* Hamburger Menu (Right) */}
-          <div className="flex items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className={`p-2 rounded-xl transition-colors ${isOpen ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-900'}`}
-            >
+          {/* Hamburger / Menu Toggle */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className={`flex flex-col items-center justify-center gap-1 min-w-[64px] h-full transition-all ${
+              isOpen ? 'text-white' : 'text-slate-500'
+            }`}
+          >
+            <div className={`p-2 rounded-2xl ${isOpen ? 'bg-slate-800' : ''}`}>
               {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+              More
+            </span>
+          </button>
 
         </div>
       </nav>

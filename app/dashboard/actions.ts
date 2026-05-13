@@ -25,12 +25,19 @@ export async function getDashboardStats(token: string) {
    const debtsRes = await query('SELECT * FROM debts WHERE user_id = $1', [userId])
     
     // Separate liabilities from assets in the debt table
-    const totalOwedByMe = debtsRes.rows
-      .filter(d => d.type?.trim().toLowerCase() !== 'owed_to_me')
+    // Using a more flexible check to catch 'owed_to_me' or 'owed to me'
+    const totalOwedToMe = debtsRes.rows
+      .filter(d => {
+        const t = d.type?.trim().toLowerCase();
+        return t === 'owed_to_me' || t === 'owed to me';
+      })
       .reduce((sum, debt) => sum + Number(debt.remaining_amount), 0)
 
-    const totalOwedToMe = debtsRes.rows
-      .filter(d => d.type?.trim().toLowerCase() === 'owed_to_me')
+    const totalOwedByMe = debtsRes.rows
+      .filter(d => {
+        const t = d.type?.trim().toLowerCase();
+        return t !== 'owed_to_me' && t !== 'owed to me';
+      })
       .reduce((sum, debt) => sum + Number(debt.remaining_amount), 0)
 
     const monthlyTxns = allTxns.filter(t => t.month === currentMonth && t.year === currentYear)
