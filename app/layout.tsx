@@ -14,11 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-slate-950 text-slate-100 min-h-screen pb-20">
-        <Navbar />
-        <main>
+     <body className="bg-slate-950 text-slate-100 min-h-screen">
+        <main className="pb-24"> {/* Extra padding-bottom so content clears the navbar */}
           {children}
         </main>
+        <Navbar />
       </body>
     </html>
   )

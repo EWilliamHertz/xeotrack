@@ -68,7 +68,7 @@ export default function Navbar() {
           </div>
 
           {/* Navigation Links (Middle) */}
-          <div className="flex flex-1 items-center justify-around sm:justify-center sm:gap-4 max-w-md mx-auto">
+          <div className="flex flex-1 items-center justify-around max-w-2xl mx-auto">
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
@@ -76,14 +76,14 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 ${
-                    isActive 
-                      ? 'bg-slate-800 text-cyan-400 border border-slate-700' 
-                      : 'text-slate-500 hover:text-slate-100'
+                  className={`flex flex-col items-center gap-0.5 min-w-[64px] transition-all duration-200 ${
+                    isActive ? 'text-cyan-400' : 'text-slate-500 hover:text-slate-300'
                   }`}
                 >
-                  <Icon size={22} />
-                  <span className="hidden md:block text-sm font-medium">{item.name}</span>
+                  <div className={`p-1.5 rounded-xl ${isActive ? 'bg-cyan-500/10' : ''}`}>
+                    <Icon size={26} />
+                  </div>
+                  <span className="text-[9px] font-black uppercase tracking-tighter">{item.name}</span>
                 </Link>
               )
             })}

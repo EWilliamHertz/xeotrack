@@ -26,11 +26,11 @@ export async function getDashboardStats(token: string) {
     
     // Separate liabilities from assets in the debt table
     const totalOwedByMe = debtsRes.rows
-      .filter(d => d.type !== 'owed_to_me')
+      .filter(d => d.type?.trim().toLowerCase() !== 'owed_to_me')
       .reduce((sum, debt) => sum + Number(debt.remaining_amount), 0)
 
     const totalOwedToMe = debtsRes.rows
-      .filter(d => d.type === 'owed_to_me')
+      .filter(d => d.type?.trim().toLowerCase() === 'owed_to_me')
       .reduce((sum, debt) => sum + Number(debt.remaining_amount), 0)
 
     const monthlyTxns = allTxns.filter(t => t.month === currentMonth && t.year === currentYear)
