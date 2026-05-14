@@ -1,13 +1,16 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Plus, TrendingUp, TrendingDown, Trash2, X } from 'lucide-react'
-import { fetchInvestments, createInvestment, updateInvestmentValue, deleteInvestment } from './actions'
+import { Plus, TrendingUp, TrendingDown, Trash2, X, Activity, PackageOpen, ShoppingCart, Tag } from 'lucide-react'
+import { fetchInvestments, createInvestment, updateInvestmentValue, deleteInvestment, logInvestmentAction, fetchInvestmentLogs } from './actions'
 
 export default function InvestmentsPage() {
   const [investments, setInvestments] = useState<any[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [viewedInv, setViewedInv] = useState<any>(null)
   const [updateValue, setUpdateValue] = useState('')
+  
+  const [logs, setLogs] = useState<any[]>([])
+  const [actionConfig, setActionConfig] = useState<{type: string, qty: string, price: string} | null>(null)
   const [form, setForm] = useState({
     name: '', category: 'Stock', quantity: '', buy_price: '', purchase_date: new Date().toISOString().split('T')[0]
   })
@@ -59,7 +62,13 @@ export default function InvestmentsPage() {
         {investments.map((inv: any) => (
           <div 
             key={inv.id} 
-            onClick={() => { setViewedInv(inv); setUpdateValue(inv.current_value); }}
+            onClick={async () => { 
+              setViewedInv(inv); 
+              setUpdateValue(inv.current_value);
+              setActionConfig(null);
+              const logRes = await fetchInvestmentLogs(localStorage.getItem('token') || '', inv.id);
+              if (logRes.success) setLogs(logRes.data);
+            }}
             className="bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer p-6 rounded-3xl flex justify-between items-center transition"
           >
             <div>
@@ -137,20 +146,72 @@ export default function InvestmentsPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs text-slate-500 font-bold tracking-widest">UPDATE CURRENT TOTAL VALUE (SEK)</label>
-              <input 
-                type="number" 
-                value={updateValue} 
-                onChange={e => setUpdateValue(e.target.value)} 
-                className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl font-mono text-xl text-white" 
-              />
+            {/* Quick Actions (Buy, Sell, Open) */}
+            <div className="flex gap-2 bg-slate-950 p-1 rounded-2xl border border-slate-800">
+              <button onClick={() => setActionConfig({type: 'buy', qty: '', price: ''})} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:bg-slate-900 transition"><ShoppingCart size={14}/> BUY</button>
+              <button onClick={() => setActionConfig({type: 'sell', qty: '', price: ''})} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-rose-400 hover:bg-slate-900 transition"><Tag size={14}/> SELL</button>
+              <button onClick={() => setActionConfig({type: 'open', qty: '', price: ''})} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-cyan-400 hover:bg-slate-900 transition"><PackageOpen size={14}/> OPEN</button>
             </div>
 
-            <div className="flex gap-2">
-              <button onClick={handleUpdate} className="flex-1 bg-cyan-600 hover:bg-cyan-500 py-3 rounded-xl font-bold">Update</button>
-              <button onClick={handleDelete} className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 px-4 py-3 rounded-xl transition">
-                <Trash2 size={20} />
+            {actionConfig && (
+              <div className="bg-slate-900 border border-cyan-500/30 p-4 rounded-xl space-y-3">
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-bold uppercase tracking-wider text-cyan-400">{actionConfig.type} Item</p>
+                  <button onClick={() => setActionConfig(null)} className="text-slate-500 hover:text-white"><X size={16}/></button>
+                </div>
+                <div className="flex gap-2">
+                  <input type="number" placeholder="Qty" value={actionConfig.qty} onChange={e => setActionConfig({...actionConfig, qty: e.target.value})} className="flex-1 bg-slate-950 border border-slate-800 p-3 rounded-lg text-sm" />
+                  <input type="number" placeholder="Price (Optional)" value={actionConfig.price} onChange={e => setActionConfig({...actionConfig, price: e.target.value})} className="flex-1 bg-slate-950 border border-slate-800 p-3 rounded-lg text-sm" />
+                </div>
+                <button 
+                  onClick={async () => {
+                    await logInvestmentAction(localStorage.getItem('token') || '', viewedInv.id, actionConfig.type, Number(actionConfig.qty), Number(actionConfig.price));
+                    setActionConfig(null);
+                    loadInvestments();
+                    const logRes = await fetchInvestmentLogs(localStorage.getItem('token') || '', viewedInv.id);
+                    if (logRes.success) setLogs(logRes.data);
+                    setViewedInv({...viewedInv, quantity: actionConfig.type === 'buy' ? viewedInv.quantity + Number(actionConfig.qty) : viewedInv.quantity - Number(actionConfig.qty)});
+                  }} 
+                  className="w-full bg-cyan-600 hover:bg-cyan-500 py-2 rounded-lg text-sm font-bold"
+                >
+                  Confirm {actionConfig.type}
+                </button>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-xs text-slate-500 font-bold tracking-widest flex items-center justify-between">
+                <span>UPDATE CURRENT TOTAL VALUE (SEK)</span>
+              </label>
+              <div className="flex gap-2">
+                <input type="number" value={updateValue} onChange={e => setUpdateValue(e.target.value)} className="flex-1 bg-slate-950 border border-slate-800 p-3 rounded-xl font-mono text-white outline-none" />
+                <button onClick={handleUpdate} className="bg-slate-800 hover:bg-slate-700 px-4 rounded-xl font-bold text-sm">Save</button>
+              </div>
+            </div>
+
+            {/* History Feed */}
+            {logs.length > 0 && (
+              <div className="space-y-3 pt-4 border-t border-slate-800">
+                <p className="text-xs text-slate-500 font-bold tracking-widest flex items-center gap-2"><Activity size={14}/> ACTIVITY LOG</p>
+                <div className="max-h-32 overflow-y-auto space-y-2 pr-2">
+                  {logs.map((log: any) => (
+                    <div key={log.id} className="flex justify-between items-center text-sm bg-slate-950 p-2 rounded-lg border border-slate-800/50">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-black uppercase px-2 py-1 rounded border ${log.action_type === 'buy' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : log.action_type === 'sell' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'}`}>
+                          {log.action_type}
+                        </span>
+                        <span className="text-slate-300 font-mono">{log.quantity} units</span>
+                      </div>
+                      <span className="text-slate-500 text-xs">{new Date(log.date).toLocaleDateString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-2 border-t border-slate-800/50">
+              <button onClick={handleDelete} className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 py-3 rounded-xl transition flex justify-center items-center gap-2 text-sm font-bold">
+                <Trash2 size={16} /> Delete Entire Asset
               </button>
             </div>
           </div>
