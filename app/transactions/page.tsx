@@ -119,27 +119,52 @@ export default function Transactions() {
         <button disabled={page === totalPages} onClick={() => setPage(page+1)} className="disabled:opacity-20"><ChevronRight/></button>
       </div>
 
-      {isModalOpen && (
+   {isModalOpen && (
         <div className="fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={handleSave} className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-[2.5rem] p-8 space-y-4 shadow-2xl">
-            <h2 className="text-2xl font-bold mb-4">New Transaction</h2>
-            <div className="flex bg-slate-950 p-1 rounded-2xl">
-              <button type="button" onClick={() => setForm({...form, type:'expense'})} className={`flex-1 py-2 rounded-xl text-xs font-black ${form.type === 'expense' ? 'bg-rose-500 text-white' : 'text-slate-500'}`}>EXPENSE</button>
-              <button type="button" onClick={() => setForm({...form, type:'income'})} className={`flex-1 py-2 rounded-xl text-xs font-black ${form.type === 'income' ? 'bg-emerald-500 text-white' : 'text-slate-500'}`}>INCOME</button>
+          <form onSubmit={handleSave} className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 space-y-3 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-2 text-white">New Transaction</h2>
+            <div className="flex bg-slate-950 p-1 rounded-xl">
+              <button type="button" onClick={() => setForm({...form, type:'expense'})} className={`flex-1 py-1.5 rounded-lg text-xs font-black transition-colors ${form.type === 'expense' ? 'bg-rose-500 text-white' : 'text-slate-500 hover:text-slate-300'}`}>EXPENSE</button>
+              <button type="button" onClick={() => setForm({...form, type:'income'})} className={`flex-1 py-1.5 rounded-lg text-xs font-black transition-colors ${form.type === 'income' ? 'bg-emerald-500 text-white' : 'text-slate-500 hover:text-slate-300'}`}>INCOME</button>
             </div>
-            <input required type="number" placeholder="0.00 SEK" className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl text-2xl font-mono" onChange={e => setForm({...form, amount: e.target.value})} />
-            <div className="grid grid-cols-1 gap-3">
-              <div className="flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                <Calendar size={18} className="text-slate-500"/>
-                <input type="date" className="bg-transparent outline-none w-full" value={form.date} onChange={e => setForm({...form, date: e.target.value})} />
+            
+            <input required type="number" placeholder="0.00 SEK" className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-xl font-mono text-white outline-none focus:border-cyan-500" onChange={e => setForm({...form, amount: e.target.value})} />
+            
+            <div className="grid grid-cols-1 gap-2">
+              <input 
+                required 
+                placeholder="Reason / Description (e.g. Groceries)" 
+                value={form.description}
+                onChange={e => setForm({...form, description: e.target.value})}
+                className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-sm text-white outline-none focus:border-cyan-500" 
+              />
+              <div className="flex items-center gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800 focus-within:border-cyan-500">
+                <Calendar size={16} className="text-slate-500"/>
+                <input type="date" className="bg-transparent text-white outline-none w-full text-sm" value={form.date} onChange={e => setForm({...form, date: e.target.value})} />
               </div>
-              <div className="flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                <User size={18} className="text-slate-500"/>
-                <input placeholder="Party (Who?)" className="bg-transparent outline-none w-full" onChange={e => setForm({...form, party: e.target.value})} />
+              <div className="flex items-center gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800 focus-within:border-cyan-500">
+                <User size={16} className="text-slate-500"/>
+                <input placeholder="Party (Who?)" className="bg-transparent text-white outline-none w-full text-sm" value={form.party} onChange={e => setForm({...form, party: e.target.value})} />
               </div>
             </div>
-            <button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500 py-4 rounded-2xl font-bold shadow-lg">Add to Ledger</button>
-            <button type="button" onClick={() => setIsModalOpen(false)} className="w-full text-slate-500 text-sm py-2">Discard</button>
+
+            <select 
+              value={form.linkDebtId} 
+              onChange={e => setForm({...form, linkDebtId: e.target.value})} 
+              className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-sm text-slate-300 outline-none appearance-none focus:border-cyan-500"
+            >
+              <option value="">No Debt Linked (General Entry)</option>
+              {debts.map((d: any) => (
+                <option key={d.id} value={d.id}>
+                  {d.name} ({isAsset(d.type) ? 'P.O.M' : 'I.O.U'}) - {Number(d.remaining_amount)} SEK
+                </option>
+              ))}
+            </select>
+
+            <div className="pt-2">
+              <button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500 py-3 rounded-xl font-bold shadow-lg text-sm text-white mb-2 transition-colors">Add to Ledger</button>
+              <button type="button" onClick={() => setIsModalOpen(false)} className="w-full text-slate-500 hover:text-slate-300 transition-colors text-sm py-1">Discard</button>
+            </div>
           </form>
         </div>
       )}
