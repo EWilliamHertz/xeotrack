@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 
+const inter = Inter({ subsets: ['latin'] })
+
 export const metadata: Metadata = {
-  title: 'XeoTrack - Financial Command Center',
-  description: 'Premium financial tracking and management',
+  title: 'XeoTrack',
+  description: 'Personal Finance Tracker',
 }
 
 export default function RootLayout({
@@ -14,10 +17,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-<body className="bg-slate-950 text-slate-100 min-h-screen flex flex-col relative">
-        {/* Top Branding Logo */}
-        <header className="fixed top-0 left-0 right-0 z-[40] bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-6 py-4">
-          <div className="flex items-center gap-2 max-w-5xl mx-auto">
+      {/* h-[100dvh]: Locks body to exact visible screen.
+        flex flex-col: Stacks Header, Main, and Navbar.
+        overflow-hidden: Stops the outer page from scrolling entirely.
+      */}
+      <body className={`${inter.className} bg-slate-950 text-slate-100 h-[100dvh] flex flex-col overflow-hidden`}>
+        
+        {/* Header: flex-none so it never shrinks */}
+        <header className="flex-none h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-6 flex items-center z-[40]">
+          <div className="flex items-center gap-2 max-w-5xl mx-auto w-full">
             <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20">
               X
             </div>
@@ -25,13 +33,16 @@ export default function RootLayout({
           </div>
         </header>
 
-        {/* Main Content Area */}
-        <main className="flex-1 pt-24 pb-6 px-4 max-w-5xl mx-auto w-full">
-          {children}
+        {/* Main Content: flex-1 takes all remaining space. overflow-y-auto makes ONLY this middle section scroll! */}
+        <main className="flex-1 overflow-y-auto p-4 w-full scroll-smooth">
+          <div className="max-w-5xl mx-auto pb-10">
+            {children}
+          </div>
         </main>
         
-        {/* Sticky Bottom Navbar */}
+        {/* Global Navbar Component: Automatically pushed to the absolute bottom of the flex container */}
         <Navbar />
+
       </body>
     </html>
   )
